@@ -1,24 +1,85 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import { useSelector, useDispatch } from "react-redux";
+import "./App.css";
+import { TodoObject, defaultState } from "./store";
+import { EditTodo, addTodo, deleteTodo } from "./store/actions/todoActions";
 
 function App() {
+  const [todo, setTodo] = React.useState("");
+  const [editTodo, setEditTodo] = React.useState<TodoObject | null>(null);
+  const todos = useSelector((state: defaultState) => state.todos);
+  const dispatch = useDispatch();
+
+  const onEditClick = (todo: TodoObject) => {
+    if (editTodo?.id === todo.id) {
+      dispatch(EditTodo(todo.id, editTodo?.todo));
+      setEditTodo(null);
+    } else {
+      setEditTodo(todo);
+    }
+  };
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
+      <div>
+        <input
+          type="text"
+          value={todo}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setTodo(e?.target?.value)
+          }
+        />
+        <button
+          style={{ marginLeft: "20px" }}
+          onClick={() => {
+            if (todo !== "") dispatch(addTodo(todo));
+            setTodo("");
+          }}
         >
-          Learn React
-        </a>
-      </header>
+          Submit
+        </button>
+      </div>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
+          marginTop: "30px",
+        }}
+      >
+        {todos?.length > 0 &&
+          todos.map((todoObject: TodoObject) => (
+            <div style={{ display: "flex", marginBottom: "20px" }}>
+              {editTodo?.id === todoObject.id ? (
+                <input
+                  type="text"
+                  value={editTodo.todo}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setEditTodo({ ...editTodo, todo: e?.target?.value })
+                  }
+                />
+              ) : (
+                <p>{todoObject.todo}</p>
+              )}
+              <button
+                style={{ marginLeft: "20px" }}
+                onClick={() => onEditClick(todoObject)}
+              >
+                {editTodo?.id === todoObject.id ? "Save" : "Edit"}
+              </button>
+              <button
+                style={{ marginLeft: "20px" }}
+                onClick={() => {
+                  editTodo?.id === todoObject.id && setEditTodo(null);
+                  dispatch(deleteTodo(todoObject.id));
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          ))}
+      </div>
     </div>
   );
 }
